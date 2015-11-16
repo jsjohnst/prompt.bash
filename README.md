@@ -42,3 +42,5 @@ Screenshots
 ![Various Git states](http://url.vg/doqi/image.png)
 ![Bash exit status](http://url.vg/doKZ/image.png)
 ![More Git states](http://url.vg/dobc/image.png)
+![SSH connection](http://url.vg/doi0/image.png)
+![Not writable dir](http://url.vg/doWH/image.png)
