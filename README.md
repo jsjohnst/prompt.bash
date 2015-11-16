@@ -26,7 +26,7 @@ environment;
 - presents details about the current Git branch and the status of the staging area and commit;
 - adds a special label in case of SSH connection with the hostname;
 - colored output: there are a bunch of themes to choose from and new themes can be easily created;
-- simple and automatic [installation procedure](https://github.com/nimiq/promptastic/blob/master/INSTALL.md);
+- simple and automatic [installation procedure](https://github.com/jsjohnst/prompt.bash/blob/master/INSTALL.md);
 - written in Python.
 
 Requirements
@@ -35,4 +35,4 @@ Python `pygit2` package installed
 
 Installation
 ------------
-See [INSTALL.md](https://github.com/nimiq/promptastic/blob/master/INSTALL.md).
+See [INSTALL.md](https://github.com/jsjohnst/prompt.bash/blob/master/INSTALL.md).
