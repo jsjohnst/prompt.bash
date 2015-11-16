@@ -1,9 +1,8 @@
 import importlib
-
 import colors
+from prompt import CURRENT_THEME
 
-theme = importlib.import_module('themes.{}'.format("default"))
-
+theme = importlib.import_module('themes.{}'.format(CURRENT_THEME))
 
 class Segment(object):
     bg = ''  # Default: no color.

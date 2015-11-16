@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+CURRENT_THEME = 'default'
+
 import sys, os
 
 import segments as segment_types
