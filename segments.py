@@ -6,7 +6,11 @@ input = getattr(__builtins__, 'raw_input', input)
 from segment import Segment, theme
 import colors, glyphs
 
-import pygit2
+try:
+    import pygit2
+except ImportError:
+    pygit2 = None
+
 
 import socket, os, sys, re, subprocess, getpass, time
 
@@ -135,6 +139,12 @@ class Ssh(Segment):
 
 class Git(Segment):
     def init(self):
+        if pygit2 is None:
+            self.text = glyphs.BRANCH + ' ' + glyphs.WRITE_ONLY
+            self.bg = colors.background(colors.RED)
+            self.fg = colors.foreground(colors.WHITE)
+            return
+
         try:
             repo_path = pygit2.discover_repository(os.getcwd())
             self.repo = pygit2.Repository(repo_path)
