@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 
-import segments as segs
+import segments as segment_types
 
 # Python 2 and 3 compatibility: FileNotFoundError in Python 3, IOError in Python 2.
 FileNotFoundError = getattr(__builtins__, 'FileNotFoundError', IOError)
@@ -20,7 +20,7 @@ class Prompt:
     def __init__(self):
         self.cwd = os.getenv('PWD')
 
-        self.first_line_left = []
+        self.prompt_line = []
 
     def render(self):
         """
@@ -38,7 +38,7 @@ class Prompt:
     def _render_first_line(self):
         # List of segments for the first line (left part, padding, right part).
         # Add left part segments.
-        segments = self.first_line_left
+        segments = self.prompt_line
 
         # Color the dividers.
         segments = self._color_dividers(segments)
@@ -62,7 +62,8 @@ class Prompt:
             # they are duplicated dividers).
             to_remove = []
             for i in range(len(segments)-1):
-                if isinstance(segments[i], segs.Divider) and isinstance(segments[i+1], segs.Divider):
+                if isinstance(segments[i], segment_types.Divider) and \
+                   isinstance(segments[i+1], segment_types.Divider):
                     to_remove.append(i)
 
             # Remove from segments the collected indexes.
@@ -72,10 +73,10 @@ class Prompt:
 
         def strip():
             # Remove initial Divider, if any.
-            if self.first_line_left and isinstance(self.first_line_left[0], segs.Divider):
-                self.first_line_left.pop(0)
+            if self.prompt_line and isinstance(self.prompt_line[0], segment_types.Divider):
+                self.prompt_line.pop(0)
 
-        self.first_line_left = remove_duplicated_dividers(remove_inactive(self.first_line_left))
+        self.prompt_line = remove_duplicated_dividers(remove_inactive(self.prompt_line))
         strip()
 
     @staticmethod
@@ -86,7 +87,7 @@ class Prompt:
     def _color_dividers(segments):
         for i, segment in enumerate(segments):
             # We need to color a divider based on the colors of the previous and next segments.
-            if isinstance(segment, segs.Divider):
+            if isinstance(segment, segment_types.Divider):
                 prev = segments[i-1] if i > 0 else None
                 next_ = segments[i+1] if i+1 < len(segments) else None
                 segment.set_colors(prev, next_)
@@ -96,22 +97,22 @@ class Prompt:
 if __name__ == '__main__':
     prompt = Prompt()
 
-    # First line left (order: left to right).
-    prompt.first_line_left.append(segs.Ssh())
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.UserAtHost())
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.Git())
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.Venv())
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.CurrentDir(prompt.cwd))
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.ReadOnly(prompt.cwd))
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.ExitCode())
-    prompt.first_line_left.append(segs.Divider())
-    prompt.first_line_left.append(segs.Root())
+    # Prompt line setup (order: left to right).
+    prompt.prompt_line.append(segment_types.Ssh())
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.UserAtHost())
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.Git())
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.Venv())
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.CurrentDir(prompt.cwd))
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.ReadOnly(prompt.cwd))
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.ExitCode())
+    prompt.prompt_line.append(segment_types.Divider())
+    prompt.prompt_line.append(segment_types.Root())
 
     write(prompt.render())
 
