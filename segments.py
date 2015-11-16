@@ -141,7 +141,7 @@ class Git(Segment):
 
         self.git_status_output = self.get_git_status_output()
 
-        wd_glyph, git_colors = self.get_working_dir_status_decorations()
+        git_colors = self.get_working_dir_status_decorations()
         self.bg = colors.background(git_colors[0])
         self.fg = colors.foreground(git_colors[1])
 
@@ -192,29 +192,19 @@ class Git(Segment):
             UNKNOWN: (colors.RED, colors.WHITE),
         }
 
-        # Statuses vs glyphs:
-        STATUSES_GLYPHS = {
-            #STATUS: glyph,
-            UNTRACKED_FILES: glyphs.RAINY,
-            CHANGES_NOT_STAGED: glyphs.CLOUDY,
-            ALL_CHANGES_STAGED: glyphs.SUNNY,
-            CLEAN: '',
-            UNKNOWN: '?',
-        }
-
         if 'untracked files' in self.git_status_output:
-            return STATUSES_GLYPHS[UNTRACKED_FILES], STATUSES_COLORS[UNTRACKED_FILES]
+            return STATUSES_COLORS[UNTRACKED_FILES]
 
         if 'changes not staged for commit' in self.git_status_output:
-            return STATUSES_GLYPHS[CHANGES_NOT_STAGED], STATUSES_COLORS[CHANGES_NOT_STAGED]
+            return STATUSES_COLORS[CHANGES_NOT_STAGED]
 
         if 'changes to be committed' in self.git_status_output:
-            return STATUSES_GLYPHS[ALL_CHANGES_STAGED], STATUSES_COLORS[ALL_CHANGES_STAGED]
+            return STATUSES_COLORS[ALL_CHANGES_STAGED]
 
         if 'nothing to commit' in self.git_status_output:
-            return STATUSES_GLYPHS[CLEAN], STATUSES_COLORS[CLEAN]
+            return STATUSES_COLORS[CLEAN]
 
-        return STATUSES_GLYPHS[UNKNOWN], STATUSES_COLORS[UNKNOWN]
+        return STATUSES_COLORS[UNKNOWN]
 
     def get_current_commit_decoration_text(self):
         DIRECTIONS_GLYPHS = {
