@@ -10,13 +10,12 @@ class Segment(object):
     fg = ''  # Default: no color.
 
     def __init__(self, *args, **kwargs):
+        self.active = True
         class_name = type(self).__name__.lower()
         if class_name in ['newline', 'root', 'divider', 'padding']:
-            # These segments are always active.
-            self.active = True
+            self.pad_text = False
         else:
-            # Other segments are active if the config files states so.
-            self.active = True
+            self.pad_text = True
 
         if self.active:
             self.init(*args, **kwargs)
@@ -24,13 +23,16 @@ class Segment(object):
     def init(self):
         pass
 
+    def get_text(self):
+        return ' ' + self.text + ' ' if self.pad_text else self.text
+
     def render(self):
         output = list()
         output.append(self.bg)
         output.append(self.fg)
-        output.append(self.text)
+        output.append(self.get_text())
         output.append(colors.reset() if self.bg or self.fg else '')
         return ''.join(output)
 
     def length(self):
-        return len(self.text)
+        return len(self.get_text())

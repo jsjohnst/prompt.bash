@@ -62,7 +62,7 @@ class ExitCode(Segment):
     fg = colors.foreground(theme.EXITCODE_FG)
 
     def init(self):
-        self.text = ' ' + str(sys.argv[1]) + ' '
+        self.text = str(sys.argv[1])
 
         if sys.argv[1] == '0':
             self.active = False
@@ -102,7 +102,7 @@ class ReadOnly(Segment):
     fg = colors.foreground(theme.READONLY_FG)
 
     def init(self, cwd):
-        self.text = ' ' + glyphs.WRITE_ONLY + ' '
+        self.text = glyphs.WRITE_ONLY
 
         if os.access(cwd, os.W_OK):
             self.active = False
@@ -146,7 +146,7 @@ class Git(Segment):
         self.fg = colors.foreground(git_colors[1])
 
         current_commit_text = self.get_current_commit_decoration_text()
-        self.text = ' ' + glyphs.BRANCH + ' ' + branch_name + ' ' + current_commit_text
+        self.text = glyphs.BRANCH + ' ' + branch_name + ' ' + current_commit_text
 
     @staticmethod
     def get_branch_name():
