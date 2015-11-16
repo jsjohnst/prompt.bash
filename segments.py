@@ -6,6 +6,8 @@ input = getattr(__builtins__, 'raw_input', input)
 from segment import Segment, theme
 import colors, glyphs
 
+import pygit2
+
 import socket, os, sys, re, subprocess, getpass, time
 
 class Jobs(Segment):
@@ -133,46 +135,35 @@ class Ssh(Segment):
 
 class Git(Segment):
     def init(self):
+        try:
+            repo_path = pygit2.discover_repository(os.getcwd())
+            self.repo = pygit2.Repository(repo_path)
+        except Exception:
+            self.active = False
+            return
+
         branch_name = self.get_branch_name()
 
         if not branch_name:
             self.active = False
             return
 
-        self.git_status_output = self.get_git_status_output()
-
         git_colors = self.get_working_dir_status_decorations()
         self.bg = colors.background(git_colors[0])
         self.fg = colors.foreground(git_colors[1])
 
         current_commit_text = self.get_current_commit_decoration_text()
-        self.text = glyphs.BRANCH + ' ' + branch_name + ' ' + current_commit_text
+        self.text = (glyphs.BRANCH + ' ' + branch_name + ' ' + current_commit_text).strip()
 
-    @staticmethod
-    def get_branch_name():
+    def get_branch_name(self):
         try:
-            # See:
-            # http://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html
-            p = subprocess.Popen(['git', 'symbolic-ref', '-q', 'HEAD'],
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate()
+            if self.repo.head_is_detached:
+                return '(Detached: %s)' % (str(self.repo.head.target)[:8] + '...')
+            else:
+                return self.repo.head.shorthand.strip()
 
-            if 'not a git repo' in str(err).lower():
-                raise FileNotFoundError
-        except FileNotFoundError:
+        except Exception:
             return None
-
-        return out.decode().replace('refs/heads/', '').strip() if out else '(Detached)'
-
-    @staticmethod
-    def get_git_status_output():
-        out, err = subprocess.Popen(['git', 'status', '--ignore-submodules'],
-                                    env={"LANG": "C", "HOME": os.getenv("HOME")},
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        if err:
-            return ''  # An empty text as something went wrong so we cannot determine the
-                       # current git status (it happens f.i. when cd-ing into .git folder).
-        return out.decode().lower()
 
     def get_working_dir_status_decorations(self):
         # Working directory statuses:
@@ -180,7 +171,8 @@ class Git(Segment):
         CHANGES_NOT_STAGED = 1
         ALL_CHANGES_STAGED = 2
         CLEAN = 3
-        UNKNOWN = 4
+        CONFLICT = 4
+        UNKNOWN = 5
 
         # Statuses vs colors:
         STATUSES_COLORS = {
@@ -189,38 +181,80 @@ class Git(Segment):
             CHANGES_NOT_STAGED: (theme.GIT_CHANGES_NOT_STAGED_BG, theme.GIT_CHANGES_NOT_STAGED_FG),
             ALL_CHANGES_STAGED: (theme.GIT_ALL_CHANGES_STAGED_BG, theme.GIT_ALL_CHANGES_STAGED_FG),
             CLEAN: (theme.GIT_CLEAN_BG, theme.GIT_CLEAN_FG),
+            CONFLICT: (theme.GIT_CONFLICT_BG, theme.GIT_CONFLICT_FG),
             UNKNOWN: (colors.RED, colors.WHITE),
         }
 
-        if 'untracked files' in self.git_status_output:
+        is_clean = True
+        has_conflicted = False
+        has_untracked = False
+        has_unstaged = False
+        has_staged = False
+
+        try:
+            for file_name, status in self.repo.status().items():
+                if status & pygit2.GIT_STATUS_IGNORED:
+                    continue
+
+                elif status & pygit2.GIT_STATUS_CONFLICTED:
+                    has_conflicted = True
+                    is_clean = False
+
+                elif status & pygit2.GIT_STATUS_WT_NEW:
+                    has_untracked = True
+                    is_clean = False
+
+                elif status & pygit2.GIT_STATUS_WT_MODIFIED or status & pygit2.GIT_STATUS_WT_DELETED:
+                    has_unstaged = True
+                    is_clean = False
+
+                elif status & pygit2.GIT_STATUS_INDEX_DELETED or \
+                     status & pygit2.GIT_STATUS_INDEX_NEW or \
+                     status & pygit2.GIT_STATUS_INDEX_MODIFIED:
+                    has_staged = True
+                    is_clean = False
+
+        except Exception:
+            return STATUSES_COLORS[UNKNOWN]
+
+        if has_conflicted:
+            return STATUSES_COLORS[CONFLICT]
+
+        if has_untracked:
             return STATUSES_COLORS[UNTRACKED_FILES]
 
-        if 'changes not staged for commit' in self.git_status_output:
+        if has_unstaged:
             return STATUSES_COLORS[CHANGES_NOT_STAGED]
 
-        if 'changes to be committed' in self.git_status_output:
+        if has_staged:
             return STATUSES_COLORS[ALL_CHANGES_STAGED]
 
-        if 'nothing to commit' in self.git_status_output:
+        if is_clean:
             return STATUSES_COLORS[CLEAN]
 
         return STATUSES_COLORS[UNKNOWN]
 
     def get_current_commit_decoration_text(self):
-        DIRECTIONS_GLYPHS = {
-            'ahead': glyphs.RIGHT_ARROW,
-            'behind': glyphs.LEFT_ARROW,
-        }
+        try:
+            ret = ''
 
-        match = re.findall(
-            r'your branch is (ahead|behind).*?(\d+) commit', self.git_status_output)
+            branch = self.repo.lookup_branch(self.repo.head.shorthand)
 
-        if not match:
+            if not branch.upstream:
+                return ret
+
+            ahead, behind = self.repo.ahead_behind(branch.target, branch.upstream.target)
+
+            if ahead:
+                amount_ahead = getattr(glyphs, 'N{}'.format(ahead)) if int(ahead) <= 10 else ahead
+                ret = amount_ahead + glyphs.RIGHT_ARROW
+
+            if behind:
+                amount_behind = getattr(glyphs, 'N{}'.format(behind)) if int(behind) <= 10 else behind
+                ret += ' ' + glyphs.LEFT_ARROW + amount_behind
+
+            return ret.strip()
+
+        except Exception:
             return ''
 
-        direction = match[0][0]
-        amount = match[0][1]
-        amount = getattr(glyphs, 'N{}'.format(amount)) if int(amount) <= 10 else amount
-
-        return amount + DIRECTIONS_GLYPHS[direction] + ' ' if direction == 'ahead' else \
-               DIRECTIONS_GLYPHS[direction] + amount + ' '
