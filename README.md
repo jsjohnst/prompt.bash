@@ -1,8 +1,8 @@
 prompt.bash: a simple but powerful prompt for Bash
 ======================================
 
-prompt.bash is a flavored **prompt** for [Bash](http://en.wikipedia.org/wiki/Bash_(Unix_shell))
-which provides info about the running **system** and **environment** in a fancy **colored** output.
+prompt.bash is a flavored prompt for [Bash](http://en.wikipedia.org/wiki/Bash_(Unix_shell))
+which provides info about the running system and environment in a fancy colored output.
 It works under **Mac OS X** and **Linux**.
 
 This project is very heavily inspired by [Promptastic](https://github.com/nimiq/promptastic) which
