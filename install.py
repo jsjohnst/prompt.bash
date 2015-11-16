@@ -90,6 +90,14 @@ class BashRc(ConfigFile):
 
 if __name__ == '__main__':
     print('\nprompt.bash setup\n=================')
+
+    try:
+        import pygit2
+    except Exception:
+        print('\npygit2 failed to load...')
+        print('Please install it before trying to continue!')
+        exit(1)
+
     print('\nChecking if prompt.bash is already installed in the system...')
 
     bash_profile = BashProfile()
