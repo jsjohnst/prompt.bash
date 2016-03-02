@@ -21,7 +21,7 @@ check the `TERM` type with `echo $TERM` and if the output differs from `xterm-25
 add the following line to `~/.bashrc`:
 
   `export TERM='xterm-256color'`
-- `pygit2` for better native python git support
+- `pygit2` for better native python git support (on OSX you can use [Homebrew](http://brew.sh)  to install the required `libgit2`)
 - **Patched fonts** for better-looking glyphs.
 Install patched [powerline-fonts](https://github.com/Lokaltog/powerline-fonts) and set the
 terminal to use them. My favorite is
